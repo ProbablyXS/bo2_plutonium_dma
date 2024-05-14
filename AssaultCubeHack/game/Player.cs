@@ -19,42 +19,83 @@ namespace RL.game
 
         public Vector3 PositionHead
         {
-            get { return Framework.Memory.ReadHEAD(Convert.ToUInt32(strPlayerPosition + Offsets.headPos), PlayerCROUCH, Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get { return Framework.Memory.ReadHEAD(Convert.ToUInt32(strPlayerPosition + Offsets.headPos), PlayerCROUCH); }
         }
 
         public Vector3 PositionFoot
         {
-            get { return Framework.Memory.ReadFOOT(Convert.ToUInt32(strPlayerPosition + Offsets.footPos), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get { return Framework.Memory.ReadFOOT(Convert.ToUInt32(strPlayerPosition + Offsets.footPos)); }
         }
 
         public int PlayerTEAM
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAM), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get { 
+                if (strPlayerList != 0)
+                {
+                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAM));
+                }
+                return default;
+            }
         }
 
         public int PlayerNumberId
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerNumberID), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get
+            {
+                if (strPlayerList != 0)
+                {
+                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerNumberID));
+                }
+                return default;
+            }
         }
 
         public int PlayerTEAMForFFA
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAMForFFA), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get
+            {
+                if (strPlayerList != 0)
+                {
+                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAMForFFA));
+                }
+                return default;
+            }
         }
 
         public int PlayerISALIVE
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerISALIVE), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get
+            {
+                if (strPlayerList != 0)
+                {
+                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerISALIVE));
+                }
+                return default;
+            }
         }
 
         public int PlayerISALIVE2
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerISALIVE2), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get
+            {
+                if (strPlayerList != 0)
+                {
+                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerISALIVE2));
+                }
+                return default;
+            }
         }
 
         public int PlayerCROUCH
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerCROUCH), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get
+            {
+                if (strPlayerList != 0)
+                {
+                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerCROUCH));
+                }
+                return default;
+            }
         }
 
         public string PlayerNAME
@@ -64,27 +105,41 @@ namespace RL.game
 
         public int PlayerWeaponId
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + 0x5B8), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get
+            {
+                if (strPlayerList != 0)
+                {
+                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerWeapon));
+                }
+                return default;
+            }
         }
 
         public int PlayerPing
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerPING), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get
+            {
+                if (strPlayerList != 0)
+                {
+                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerPING));
+                }
+                return default;
+            }
         }
 
         public static Vector3 SelfPosFoot
         {
-            get { return Framework.Memory.ReadFOOT(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerPOSITION), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get { return Framework.Memory.ReadFOOT(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerPOSITION)); }
         }
 
         public static int SelfPlayerTeam
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerTEAM), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get { return Framework.Memory.Read<int>(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerTEAM)); }
         }
 
         public static int SelfPlayerNumberID
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerNumberID), Framework.Offsets.vmm, Framework.Offsets.processPid); }
+            get { return Framework.Memory.Read<int>(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerNumberID)); }
         }
 
         public static bool PlayerIsValid(Player p)

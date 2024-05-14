@@ -12,6 +12,7 @@ using System.Threading;
 using System.Windows.Forms;
 using Utilities;
 using VECRPROJECT.util;
+using static Framework.Memory;
 using Menu = AssaultCubeHack.Menu;
 
 namespace Examples
@@ -63,15 +64,8 @@ namespace Examples
 
             if (Security.bpAcc == true && Security.pfpf == 1)
             {
-                //try
-                //{
-                //MessageBox.Show("1");
                 Menu menu = new Menu();
-                //MessageBox.Show("2");
                 menu.InitializationCONTROLS();
-                //    MessageBox.Show("3");
-                //}
-                //catch (Exception e) { MessageBox.Show(e.Message); }
             }
             else
             {
@@ -207,7 +201,7 @@ namespace Examples
             if (Security.bpAcc == true && Security.pfpf == 1)
             {
                 //CALCUL SPECIFIC ADDRESS
-                Offsets.baseAddress = Framework.Memory.Read<int>(Convert.ToUInt32(Offsets.baseAddress), Framework.Offsets.vmm, Framework.Offsets.processPid);
+                Offsets.baseAddress = Framework.Memory.Read<int>(Convert.ToUInt32(Offsets.baseAddress));
                 Offsets.PlayersLIST = (Offsets.baseAddress) - Offsets.PlayersLIST;
                 Offsets.VSAT = (Offsets.baseAddress) - Offsets.VSAT;
 
@@ -229,10 +223,6 @@ namespace Examples
                 //start thread for change the settings value
                 overlayThread = new Thread(KeysPress);
                 overlayThread.Start();
-
-                //start thread security check
-                //overlayThread = new Thread(Security.SecurityCheck);
-                //overlayThread.Start();
 
                 //set up low level keyboard hooking to recieve key events while not in focus
                 gkh.HookedKeys.Add(Settings.Default.Key_Show_MENU);
@@ -414,6 +404,9 @@ namespace Examples
         private void UpdateHack()
         {
 
+            overlayThread = new Thread(readViewMatrix);
+            overlayThread.Start();
+
             //update loop
             while (isRunning == true)
             {
@@ -428,7 +421,7 @@ namespace Examples
                 }
 
                 //refresh ESP
-                Thread.Sleep(1);
+                Thread.Sleep(2000);
             }
 
             //cleanup
@@ -436,13 +429,22 @@ namespace Examples
 
         }
 
+        public static void readViewMatrix()
+        {
+            while (true)
+            {
+                //read view matrix
+                Matrix.viewMatrix = Framework.Memory.ReadMatrix(Convert.ToUInt32(Offsets.viewMatrix));
+
+                Thread.Sleep(7);
+            }
+        }
+
         private void ReadGameMemory()
         {
             //passe seulement si le jeu est ouvert ou si le refreshdrawing == true + self local player est == a la valeur de base
             if (!isRunning || (GetActiveWindowTitle() == false)) return;
 
-            //read view matrix
-            Matrix.viewMatrix = Framework.Memory.ReadMatrix(Convert.ToUInt32(Offsets.viewMatrix), Framework.Offsets.vmm, Framework.Offsets.processPid);
             //VSAT
             if (Settings.Default.VSAT == true)
             {
@@ -455,9 +457,9 @@ namespace Examples
                 // str = structure
                 int strPlayerPosition = Offsets.baseAddress + Offsets.ptrPlayerPositionArray * i;
                 int strPlayerList = (Offsets.PlayersLIST + Offsets.ptrPlayerLISTArray * i);
-                int PlayerTeam = Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAM), Framework.Offsets.vmm, Framework.Offsets.processPid);
+                int PlayerTeam = Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAM));
                 
-                int PlayerTeam2 = Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAMForFFA), Framework.Offsets.vmm, Framework.Offsets.processPid);
+                int PlayerTeam2 = Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAMForFFA));
 
                 if (Player.players.Count >= numPlayers)
                 {

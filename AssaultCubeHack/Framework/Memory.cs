@@ -13,7 +13,7 @@ namespace Framework
         //CROUCH
         public static volatile float _CROUCH = 74F;
 
-        public static T Read<T>(ulong address, Vmm vmm, uint processPid) where T : struct
+        public static T Read<T>(ulong address) where T : struct
         {
             int size = Marshal.SizeOf(typeof(T));
             byte[] buffer = new byte[size];
@@ -21,27 +21,23 @@ namespace Framework
             {
                 fixed (byte* pBuffer = buffer)
                 {
-                    // memory read : physical with scatter function (2 pages)
-                    MEM_SCATTER[] MEMsPhysical = vmm.MemReadScatter(0xffffffff, 0, 0x1000, 0x2000);
-                    if (vmm.MemRead(processPid, address, (uint)size, (nint)pBuffer) == size)
+                    if (Offsets.vmm.MemRead(Offsets.processPid, address, (uint)size, (nint)pBuffer, 0x0001 | 0x0010 | 0x0002 | 0x0020) == size)
                     {
                         return ByteArrayToStructure<T>(buffer);
                     }
-                    //else
-                    //{
-                    //    Console.WriteLine("Failed to read memory! MEMORY");
-                    //    throw new InvalidOperationException($"Failed to read from memory.");
-                    //}
+                    else
+                    {
+                        Console.WriteLine($"Failed to read {typeof(T).Name} from memory.");
+                        return default(T);
+                    }
                 }
-
-                return ByteArrayToStructure<T>(buffer);
             }
         }
 
         /// <summary>
         /// Reads 16 consecutive floats into a Matrix
         /// </summary>
-        public static Matrix ReadMatrix(ulong address, Vmm vmm, uint processPid)
+        public static Matrix ReadMatrix(ulong address)
         {
             //float matrix[16]; 16-value array laid out contiguously in memory       
             byte[] buffer = new byte[16 * 4];
@@ -50,7 +46,7 @@ namespace Framework
             {
                 fixed (byte* pBuffer = buffer)
                 {
-                    if (vmm.MemRead(processPid, address, (uint)size, (nint)pBuffer) == size)
+                    if (Offsets.vmm.MemRead(Offsets.processPid, address, (uint)size, (nint)pBuffer, 0x0001 | 0x0010 | 0x0002 | 0x0020) == size)
                     {
                         //convert bytes to floats
                         Matrix mat = new Matrix();
@@ -78,13 +74,13 @@ namespace Framework
                     else
                     {
                         Console.WriteLine("Failed to read memory!");
-                        throw new InvalidOperationException($"Failed to read from memory.");
+                        return default;
                     }
                 }
             }
         }
 
-        public static Vector3 ReadHEAD(ulong address, int PlayerIsCrouch, Vmm vmm, uint processPid)
+        public static Vector3 ReadHEAD(ulong address, int PlayerIsCrouch)
         {
             //3 floats contiguously in memory
             byte[] buffer = new byte[3 * 4];
@@ -93,7 +89,7 @@ namespace Framework
             {
                 fixed (byte* pBuffer = buffer)
                 {
-                    if (vmm.MemRead(processPid, address, (uint)size, (nint)pBuffer) == size)
+                    if (Offsets.vmm.MemRead(Offsets.processPid, address, (uint)size, (nint)pBuffer, 0x0001 | 0x0010 | 0x0002 | 0x0020) == size)
                     {
                         //convert bytes to floats
                         Vector3 vec = new Vector3();
@@ -120,13 +116,13 @@ namespace Framework
                     else
                     {
                         Console.WriteLine("Failed to read memory! HEAD");
-                        throw new InvalidOperationException($"Failed to read from memory.");
+                        return default;
                     }
                 }
             }
         }
 
-        public static Vector3 ReadFOOT(ulong address, Vmm vmm, uint processPid)
+        public static Vector3 ReadFOOT(ulong address)
         {
             //3 floats contiguously in memory
             byte[] buffer = new byte[3 * 4];
@@ -135,7 +131,7 @@ namespace Framework
             {
                 fixed (byte* pBuffer = buffer)
                 {
-                    if (vmm.MemRead(processPid, address, (uint)size, (nint)pBuffer) == size)
+                    if (Offsets.vmm.MemRead(Offsets.processPid, address, (uint)size, (nint)pBuffer, 0x0001 | 0x0010 | 0x0002 | 0x0020) == size)
                     {
                         //convert bytes to floats
                         Vector3 vec = new Vector3();
@@ -147,7 +143,7 @@ namespace Framework
                     else
                     {
                         Console.WriteLine("Failed to read memory! FOOT");
-                        throw new InvalidOperationException($"Failed to read from memory.");
+                        return default;
                     }
                 }
             }
@@ -156,8 +152,8 @@ namespace Framework
         public static void init(string gameName, string moduleName)
         {
             Console.WriteLine("Loading dma");
-            Offsets.vmm = new Vmm("-printf", "-v", "-device", "fpga");
-            Offsets.vmmScatter = new VmmScatter(IntPtr.Zero);
+            Offsets.vmm = new Vmm("-printf", "-device", "fpga", "-norefresh");
+
             Console.WriteLine("Finding process");
 
             while (true)
