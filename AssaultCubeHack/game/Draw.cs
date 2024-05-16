@@ -3,6 +3,7 @@ using Examples;
 using RL.Properties;
 using SharpDX.DirectWrite;
 using System;
+using System.Threading;
 using VECRPROJECT.util;
 
 namespace RL.game
@@ -97,7 +98,7 @@ namespace RL.game
             {
 
                 //find first living enemy player in view
-                Player target = Player.players.Find(p => Player.PlayerIsValidForAimbot(p));
+                Player target = Player.players.Find(p => Player.PlayerIsValid(p));
                 float num = Example.gameWidth / 2; //GameWidth
                 float num2 = Example.gameHeight / 2;  //GameHeight
                 float FirstDist = 99999f;
@@ -224,7 +225,7 @@ namespace RL.game
 
                 if (Settings.Default.Draw_Enemy_Close)
                 {
-                    if (target == null || !Player.PlayerIsValidForAimbot(target)) return;
+                    if (target == null || !Player.PlayerIsValid(target)) return;
 
                     Vector2 headPos1, footPos1;
                     if (Matrix.viewMatrix.WorldToScreen(target.PositionHead, Example.gameWidth, Example.gameHeight, out headPos1) &&

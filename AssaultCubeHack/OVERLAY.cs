@@ -44,7 +44,7 @@ namespace Examples
         public static bool isRunning = false;
 
         //game objects
-        private int numPlayers = 18;
+        private static int numPlayers = 18;
         public static int gameWidth, gameHeight = 1;
 
         //GRAPHIC
@@ -420,8 +420,8 @@ namespace Examples
                     Aimbot.aimbot.UpdateAimbot();
                 }
 
-                //refresh ESP
-                Thread.Sleep(2000);
+                //refresh
+                Thread.Sleep(8);
             }
 
             //cleanup
@@ -433,10 +433,29 @@ namespace Examples
         {
             while (true)
             {
-                //read view matrix
                 Matrix.viewMatrix = Framework.Memory.ReadMatrix(Convert.ToUInt32(Offsets.viewMatrix));
 
-                Thread.Sleep(7);
+                Framework.Memory.addScatterReadRequest(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerTEAM), sizeof(int));
+                Framework.Memory.addScatterReadRequest(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerNumberID), sizeof(int));
+                Framework.Memory.addScatterReadRequest(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerPOSITION), sizeof(int));
+
+                for (int i = 0; i <= numPlayers; i++)
+                {
+                    int strPlayerList = (Offsets.PlayersLIST + Offsets.ptrPlayerLISTArray * i);
+
+                    Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAM), sizeof(int));
+                    Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerNumberID), sizeof(int));
+                    Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAMForFFA), sizeof(int));
+                    Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerISALIVE), sizeof(int));
+                    Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerISALIVE2), sizeof(int));
+                    Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerCROUCH), sizeof(int));
+                    Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerWeapon), sizeof(int));
+                    Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerPING), sizeof(int));
+                }
+
+                Framework.Memory.ExecuteReadScatter();
+
+                Thread.Sleep(8);
             }
         }
 
@@ -458,7 +477,7 @@ namespace Examples
                 int strPlayerPosition = Offsets.baseAddress + Offsets.ptrPlayerPositionArray * i;
                 int strPlayerList = (Offsets.PlayersLIST + Offsets.ptrPlayerLISTArray * i);
                 int PlayerTeam = Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAM));
-                
+
                 int PlayerTeam2 = Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAMForFFA));
 
                 if (Player.players.Count >= numPlayers)
@@ -473,28 +492,6 @@ namespace Examples
 
                     if (i <= numPlayers - 1)
                     {
-
-                        //Enlever son propre ESP && GET SELF LOCAL PLAYER TEAM
-                        if (Player.SelfPlayerNumberID == i)
-                        {
-                            //Offsets.SelfLocalPlayerTEAM = PlayerTeam; //decimal to hex
-
-                            Player.players[i] = new Player(0, 0);
-                            //Player.players.Remove(Player.players[i]);
-                            continue;
-                        }
-                        //END
-
-                        //Enlever les esp ALLIES si desactivé
-                        if (Settings.Default.Show_Allies == false && PlayerTeam2 == 0)
-                        {
-                            if (PlayerTeam == Player.SelfPlayerTeam)
-                            {
-                                Player.players[i] = new Player(0, 0);
-                                continue;
-                            }
-                        }
-
                         Player.players[i] = new Player(strPlayerPosition, strPlayerList);
                         //END
                     }
@@ -503,7 +500,32 @@ namespace Examples
                 {
                     Player.players.Add(new Player(strPlayerPosition, strPlayerList));
                 }
+
+                //Enlever son propre ESP && GET SELF LOCAL PLAYER TEAM
+                if (Player.SelfPlayerNumberID == i)
+                {
+                    //Offsets.SelfLocalPlayerTEAM = PlayerTeam; //decimal to hex
+
+                    Player.players[i] = new Player(0, 0);
+                    //Player.players.Remove(Player.players[i]);
+                    continue;
+                }
+                //END
+
+                //Enlever les esp ALLIES si desactivé
+                if (Settings.Default.Show_Allies == false && PlayerTeam2 == 0)
+                {
+                    Console.WriteLine(Player.SelfPlayerTeam);
+                    if (PlayerTeam == Player.SelfPlayerTeam)
+                    {
+                        Player.players[i] = new Player(0, 0);
+                        continue;
+                    }
+                }
+
             }
+
+            Framework.Memory.ExecuteReadScatter();
         }
 
         private void AssaultHack_FormClosing(object sender, FormClosingEventArgs e)

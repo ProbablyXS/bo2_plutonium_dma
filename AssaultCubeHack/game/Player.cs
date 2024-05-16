@@ -1,6 +1,7 @@
 ﻿using AssaultCubeHack;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace RL.game
 {
@@ -10,6 +11,11 @@ namespace RL.game
 
         public int strPlayerPosition;
         public int strPlayerList;
+
+
+        //public int PlayerIsAlive;
+
+
 
         public static int GameModeIsNotFFA = 0;
         public static int[] PlayerNotChooseTeam = { 0, 9 }; //Player not choose TEAM (Spectator = 9)
@@ -29,10 +35,12 @@ namespace RL.game
 
         public int PlayerTEAM
         {
-            get { 
+            get
+            {
+
                 if (strPlayerList != 0)
                 {
-                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAM));
+                    return Framework.Memory.ReadScatter<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAM));
                 }
                 return default;
             }
@@ -44,7 +52,7 @@ namespace RL.game
             {
                 if (strPlayerList != 0)
                 {
-                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerNumberID));
+                    return Framework.Memory.ReadScatter<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerNumberID));
                 }
                 return default;
             }
@@ -56,7 +64,7 @@ namespace RL.game
             {
                 if (strPlayerList != 0)
                 {
-                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAMForFFA));
+                    return Framework.Memory.ReadScatter<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAMForFFA));
                 }
                 return default;
             }
@@ -68,11 +76,11 @@ namespace RL.game
             {
                 if (strPlayerList != 0)
                 {
-                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerISALIVE));
+                    return Framework.Memory.ReadScatter<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerISALIVE));
                 }
                 return default;
             }
-        }
+        } //a mettre en cache
 
         public int PlayerISALIVE2
         {
@@ -80,11 +88,11 @@ namespace RL.game
             {
                 if (strPlayerList != 0)
                 {
-                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerISALIVE2));
+                    return Framework.Memory.ReadScatter<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerISALIVE2));
                 }
                 return default;
             }
-        }
+        } //a mettre en cache
 
         public int PlayerCROUCH
         {
@@ -92,15 +100,15 @@ namespace RL.game
             {
                 if (strPlayerList != 0)
                 {
-                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerCROUCH));
+                    return Framework.Memory.ReadScatter<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerCROUCH));
                 }
                 return default;
             }
-        }
+        } //a mettre en cache
 
         public string PlayerNAME
         {
-            get { return Memory.ReadString(strPlayerList + Offsets.PlayerNAME, 16); }
+            get { return Framework.Memory.ReadString(Convert.ToUInt32(strPlayerList + Offsets.PlayerNAME), 16); }
         }
 
         public int PlayerWeaponId
@@ -109,7 +117,7 @@ namespace RL.game
             {
                 if (strPlayerList != 0)
                 {
-                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerWeapon));
+                    return Framework.Memory.ReadScatter<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerWeapon));
                 }
                 return default;
             }
@@ -121,7 +129,7 @@ namespace RL.game
             {
                 if (strPlayerList != 0)
                 {
-                    return Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerPING));
+                    return Framework.Memory.ReadScatter<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerPING));
                 }
                 return default;
             }
@@ -134,12 +142,13 @@ namespace RL.game
 
         public static int SelfPlayerTeam
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerTEAM)); }
+            //get { return Framework.Memory.Read<int>(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerTEAM)); }
+            get { return Framework.Memory.ReadScatter<int>(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerTEAM)); }
         }
 
         public static int SelfPlayerNumberID
         {
-            get { return Framework.Memory.Read<int>(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerNumberID)); }
+            get { return Framework.Memory.ReadScatter<int>(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerNumberID)); }
         }
 
         public static bool PlayerIsValid(Player p)

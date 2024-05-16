@@ -1,12 +1,12 @@
-﻿using System.Text;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using static Framework.vmmi;
-using System.Globalization;
-using System.Text.RegularExpressions;
-using System;
-using System.Linq;
+﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using static Framework.vmmi;
 
 /*  
  *  C# API wrapper 'vmmsharp' for MemProcFS 'vmm.dll' and LeechCore 'leechcore.dll' APIs.
@@ -2646,7 +2646,7 @@ namespace Framework
         bool disposed = false;
         IntPtr hS = IntPtr.Zero;
 
-        private VmmScatter()
+        private VmmScatter(Vmm.MAP_HANDLEENTRY[] mAP_HANDLEENTRies)
         {
             ;
         }
