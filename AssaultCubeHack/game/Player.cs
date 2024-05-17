@@ -25,12 +25,12 @@ namespace RL.game
 
         public Vector3 PositionHead
         {
-            get { return Framework.Memory.ReadHEAD(Convert.ToUInt32(strPlayerPosition + Offsets.headPos), PlayerCROUCH); }
+            get { return Framework.Memory.ReadHEADScatter(Convert.ToUInt32(strPlayerPosition + Offsets.headPos), PlayerCROUCH); }
         }
 
         public Vector3 PositionFoot
         {
-            get { return Framework.Memory.ReadFOOT(Convert.ToUInt32(strPlayerPosition + Offsets.footPos)); }
+            get { return Framework.Memory.ReadFOOTScatter(Convert.ToUInt32(strPlayerPosition + Offsets.footPos)); }
         }
 
         public int PlayerTEAM
@@ -108,7 +108,7 @@ namespace RL.game
 
         public string PlayerNAME
         {
-            get { return Framework.Memory.ReadString(Convert.ToUInt32(strPlayerList + Offsets.PlayerNAME), 16); }
+            get { return Framework.Memory.ReadStringScatter(Convert.ToUInt32(strPlayerList + Offsets.PlayerNAME), 16); }
         }
 
         public int PlayerWeaponId
@@ -137,7 +137,7 @@ namespace RL.game
 
         public static Vector3 SelfPosFoot
         {
-            get { return Framework.Memory.ReadFOOT(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerPOSITION)); }
+            get { return Framework.Memory.ReadFOOTScatter(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerPOSITION)); }
         }
 
         public static int SelfPlayerTeam

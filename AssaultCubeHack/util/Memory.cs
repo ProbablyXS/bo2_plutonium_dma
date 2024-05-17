@@ -31,7 +31,6 @@ namespace AssaultCubeHack
             NativeMethods.CloseHandle(handle);
         }
 
-
         public static bool GetProcessesByName(string pName, out Process process)
         {
             Process[] pList = Process.GetProcessesByName(pName);

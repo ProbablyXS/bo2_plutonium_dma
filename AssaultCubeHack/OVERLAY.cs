@@ -34,8 +34,10 @@ namespace Examples
         public static int refreshWindows = 1500;
 
         //target process
-        public const string processName = "plutonium-bootstrapper-win32.exe";
-        public const string processGame = "Moonlight";
+        public const string processGame = "plutonium-bootstrapper-win32.exe";
+        public const string keyHelpFindProcess = "t6mp";
+        public const string processName = "Moonlight";
+        public const string processClassName = "SDL_app";
         public static string processMainApp = @"\r\n";
         public static Process process;
 
@@ -110,77 +112,40 @@ namespace Examples
             if (Security.bpAcc == true && Security.pfpf == 1)
             {
 
-                Framework.Memory.init(processName, "");
-
                 var ConsoleAPP = NativeMethods.GetConsoleWindow();
                 bool success = false;
 
                 do
                 {
-                    if (Memory.GetProcessesByName("Moonlight", out process))
+                    Console.WriteLine("Searching Moonlight process with SDL_app ClassName");
+
+                    var ClassName = NativeMethods.FindWindow(processClassName, processName);
+
+                    if (Memory.GetProcessesByName("Moonlight", out process) && ClassName != IntPtr.Zero)
                     {
-                        if (process.MainWindowTitle.ToLower() == "")
-                        {
-                            try
-                            {
-                                process.Kill();
-                                AttachToGameProcess();
-                                return;
-                            }
-                            catch
-                            {
-                                AttachToGameProcess();
-                                return;
-                            }
-                        }
-                        if (process.MainWindowTitle.ToLower() == @"bin\plutonium-bootstrapper-win32.exe")
-                        {
-                            NativeMethods.ShowWindow(process.MainWindowHandle, NativeMethods.SW_HIDE);
-                            AttachToGameProcess();
-                            return;
-                        }
                         Console.WriteLine("Attaching...");
                         //try to attach to game process
-                        try
-                        {
-                            //success  
-                            if (process.MainWindowTitle.ToLower().Contains(processGame.ToLower()))
-                            {
-                                Console.WriteLine("success");
-                                IntPtr handle = Memory.OpenProcess(process.Id);
-                                if (handle != IntPtr.Zero)
-                                {
-                                    NativeMethods.ShowWindow(process.MainWindowHandle, NativeMethods.SW_RESTORE);
-                                    NativeMethods.SetForegroundWindow(process.MainWindowHandle);
-                                    success = true;
-                                    Console.ForegroundColor = ConsoleColor.Green;
-                                    Console.WriteLine("Attached Handle: " + handle);
-                                    //NativeMethods.ShowWindow(ConsoleAPP, NativeMethods.SW_HIDE);
-                                }
-                            }
-                            else
-                            {
-                                //fail
-                                Security.FAILACC();
-                            }
-                        }
-                        catch
-                        {
-                            //fail
-                            Security.FAILACC();
-                        }
+
+                        //success  
+
+                        Console.WriteLine("success");
+
+                        NativeMethods.ShowWindow(process.MainWindowHandle, NativeMethods.SW_RESTORE);
+                        NativeMethods.SetForegroundWindow(process.MainWindowHandle);
+                        success = true;
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("Attached Handle: " + ClassName.ToString("X"));
+                        Console.WriteLine("Name: " + process.ProcessName);
+
+                        Framework.Memory.init(processGame, "");
+
+                        //NativeMethods.ShowWindow(ConsoleAPP, NativeMethods.SW_HIDE);
                     }
                     else
                     {
-                        try
-                        {
-                            //fail
-                            Security.FAILACC();
-                        }
-                        catch
-                        {
-
-                        }
+                        Thread.Sleep(2500);
+                        AttachToGameProcess();
+                        return;
                     }
                 } while (!success);
 
@@ -205,8 +170,12 @@ namespace Examples
                 Offsets.PlayersLIST = (Offsets.baseAddress) - Offsets.PlayersLIST;
                 Offsets.VSAT = (Offsets.baseAddress) - Offsets.VSAT;
 
-                Console.WriteLine(Offsets.baseAddress);
-                Console.WriteLine(Offsets.PlayersLIST);
+                //Console.WriteLine("Base Address: " + Offsets.baseAddress.ToString("X"));
+                //Console.WriteLine("Players List Address: " + Offsets.PlayersLIST.ToString("X"));
+                //Console.WriteLine("VSAT Address: " + Offsets.VSAT.ToString("X"));
+
+                Console.WriteLine("Ready.");
+
                 //END
 
                 //start thread flag
@@ -291,7 +260,9 @@ namespace Examples
             //update flag, make sure game is still running
             while (isRunning)
             {
-                if (!Memory.IsProcessRunning(process))
+                var ClassName = NativeMethods.FindWindow(processClassName, processName);
+
+                if (!Memory.IsProcessRunning(process) || ClassName == IntPtr.Zero)
                 {
                     isRunning = false;
                     Security.FAILACC();
@@ -404,7 +375,7 @@ namespace Examples
         private void UpdateHack()
         {
 
-            overlayThread = new Thread(readViewMatrix);
+            overlayThread = new Thread(readAddressThreads);
             overlayThread.Start();
 
             //update loop
@@ -429,11 +400,13 @@ namespace Examples
 
         }
 
-        public static void readViewMatrix()
+        public static void readAddressThreads()
         {
             while (true)
             {
-                Matrix.viewMatrix = Framework.Memory.ReadMatrix(Convert.ToUInt32(Offsets.viewMatrix));
+                //Matrix.viewMatrix = Framework.Memory.ReadMatrix(Convert.ToUInt32(Offsets.viewMatrix));
+
+                Framework.Memory.addScatterReadRequest(Convert.ToUInt32(Offsets.viewMatrix), 64);
 
                 Framework.Memory.addScatterReadRequest(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerTEAM), sizeof(int));
                 Framework.Memory.addScatterReadRequest(Convert.ToUInt32(Offsets.SelfLocalPlayer + Offsets.SelfLocalPlayerNumberID), sizeof(int));
@@ -442,6 +415,7 @@ namespace Examples
                 for (int i = 0; i <= numPlayers; i++)
                 {
                     int strPlayerList = (Offsets.PlayersLIST + Offsets.ptrPlayerLISTArray * i);
+                    int strPlayerPosition = Offsets.baseAddress + Offsets.ptrPlayerPositionArray * i;
 
                     Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAM), sizeof(int));
                     Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerNumberID), sizeof(int));
@@ -451,11 +425,19 @@ namespace Examples
                     Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerCROUCH), sizeof(int));
                     Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerWeapon), sizeof(int));
                     Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerPING), sizeof(int));
+                    Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerList + Offsets.PlayerNAME), sizeof(int));
+
+
+                    Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerPosition + Offsets.headPos), 12);
+                    Framework.Memory.addScatterReadRequest(Convert.ToUInt32(strPlayerPosition + Offsets.footPos), 12);
+
                 }
 
                 Framework.Memory.ExecuteReadScatter();
 
-                Thread.Sleep(8);
+                Matrix.viewMatrix = Framework.Memory.ReadMatrixScatter(Convert.ToUInt32(Offsets.viewMatrix));
+
+                Thread.Sleep(1);
             }
         }
 
@@ -476,9 +458,9 @@ namespace Examples
                 // str = structure
                 int strPlayerPosition = Offsets.baseAddress + Offsets.ptrPlayerPositionArray * i;
                 int strPlayerList = (Offsets.PlayersLIST + Offsets.ptrPlayerLISTArray * i);
-                int PlayerTeam = Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAM));
+                int PlayerTeam = Framework.Memory.ReadScatter<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAM));
 
-                int PlayerTeam2 = Framework.Memory.Read<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAMForFFA));
+                int PlayerTeam2 = Framework.Memory.ReadScatter<int>(Convert.ToUInt32(strPlayerList + Offsets.PlayerTEAMForFFA));
 
                 if (Player.players.Count >= numPlayers)
                 {
@@ -676,7 +658,7 @@ namespace Examples
 
             NativeMethods.GetWindowText(handle, builder, builder.Capacity);
 
-            if (builder.ToString().ToLower().Contains(processGame.ToLower()) == true || (builder.ToString().ToLower().Contains(processMainApp.ToLower()) == true))
+            if (builder.ToString().ToLower().Contains(processName.ToLower()) == true || (builder.ToString().ToLower().Contains(processMainApp.ToLower()) == true))
             {
                 return true;
             }
@@ -696,7 +678,7 @@ namespace Examples
 
             if (builder.ToString().ToLower().Contains(processMainApp.ToLower()) == true) return false;
 
-            if (builder.ToString().ToLower().Contains(processGame.ToLower()) == true)
+            if (builder.ToString().ToLower().Contains(processName.ToLower()) == true)
             {
                 return true;
             }

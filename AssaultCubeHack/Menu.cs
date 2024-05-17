@@ -117,35 +117,6 @@ namespace AssaultCubeHack
 
         public void AttachToGameProcess()
         {
-            bool success = false;
-            do
-            {
-                //check if game is running
-                if (Memory.GetProcessesByName(Examples.Example.processName, out Examples.Example.process))
-                {
-                    try
-                    {
-                        //success  
-                        IntPtr handle = Memory.OpenProcess(Examples.Example.process.Id);
-                        if (handle != IntPtr.Zero)
-                        {
-                            success = true;
-                        }
-                        else
-                        {
-                            Security.FAILACC();
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        Security.FAILACC();
-                    }
-                }
-                else
-                {
-                    Security.FAILACC();
-                }
-            } while (!success);
 
             InitializeOverlayWindowAttributes();
             StartThreads();
@@ -1064,14 +1035,6 @@ namespace AssaultCubeHack
             //update flag, make sure game is still running
             while (Examples.Example.isRunning)
             {
-
-                if (!Memory.IsProcessRunning(Examples.Example.process))
-                {
-                    Examples.Example.isRunning = false;
-                    Security.FAILACC();
-                    continue;
-                }
-
                 //ensure we are in focus and on top of game
                 SetOverlayPosition((IntPtr)handle);
 

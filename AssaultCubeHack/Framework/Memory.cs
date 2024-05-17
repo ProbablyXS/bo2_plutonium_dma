@@ -55,29 +55,27 @@ namespace Framework
         {
 
             Framework.Offsets.vmmScatter.Execute();
-            //Framework.Offsets.vmmScatter.Clear(Offsets.processPid, 0);
+        }
 
-            //int size = Marshal.SizeOf(typeof(T));
-            //byte[] buffer = new byte[size];
-            //unsafe
-            //{
-            //fixed (byte* pBuffer = buffer)
-            //{
+        public static string ReadStringScatter(ulong address, ulong size)
+        {
+            unsafe
+            {
 
-            //Framework.Offsets.vmmScatter.Prepare(address, (uint)size);
-            //byte[] buffer = Offsets.vmmScatter.Read(address, (uint)size);
+                byte[] buffer = Offsets.vmmScatter.Read(address, (uint)size);
 
-            //if (Offsets.vmm.MemRead(Offsets.processPid, address, (uint)size, (nint)pBuffer, Framework.Vmm.FLAG_ZEROPAD_ON_FAIL | Framework.Vmm.FLAG_NOPAGING_IO) == size)
-            //{
-            //return ByteArrayToStructure<T>(buffer);
-            //}
-            //else
-            //{
-            //    Console.WriteLine($"Failed to read {typeof(T).Name} from memory.");
-            //    return default(T);
-            //}
-            //}
-            //}
+                //encode bytes to ascii
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    if (buffer[i] == 0)
+                    {
+                        byte[] tmpBuffer = new byte[i];
+                        Buffer.BlockCopy(buffer, 0, tmpBuffer, 0, i);
+                        return Encoding.ASCII.GetString(tmpBuffer);
+                    }
+                }
+                return Encoding.ASCII.GetString(buffer);
+            }
         }
 
         public static string ReadString(ulong address, ulong size)
@@ -109,6 +107,8 @@ namespace Framework
                 }
             }
         }
+
+
 
         /// <summary>
         /// Reads 16 consecutive floats into a Matrix
@@ -160,10 +160,7 @@ namespace Framework
         {
             unsafe
             {
-                Framework.Offsets.vmmScatter.Prepare(address, 0x64);
-                //Framework.Offsets.vmmScatter.Execute();
-
-                byte[] buffer = Offsets.vmmScatter.Read(address, 0x64);
+                byte[] buffer = Offsets.vmmScatter.Read(address, 64);
 
                 //convert bytes to floats
                 Matrix mat = new Matrix();
@@ -187,9 +184,6 @@ namespace Framework
                 mat.m42 = BitConverter.ToSingle(buffer, (13 * 4));
                 mat.m43 = BitConverter.ToSingle(buffer, (14 * 4));
                 mat.m44 = BitConverter.ToSingle(buffer, (15 * 4));
-
-                //Framework.Offsets.vmmScatter.Clear(Offsets.processPid, Framework.Vmm.FLAG_NOCACHE);
-
                 return mat;
             }
         }
@@ -198,10 +192,8 @@ namespace Framework
         {
             unsafe
             {
-                Framework.Offsets.vmmScatter.Prepare(address, 0x12);
-                Framework.Offsets.vmmScatter.Execute();
+                byte[] buffer = Offsets.vmmScatter.Read(address, 12);
 
-                byte[] buffer = Offsets.vmmScatter.Read(address, 0x12);
                 //convert bytes to floats
                 Vector3 vec = new Vector3();
 
@@ -222,7 +214,22 @@ namespace Framework
                 vec.x = BitConverter.ToSingle(buffer, (0 * 4));
                 vec.y = BitConverter.ToSingle(buffer, (1 * 4));
                 vec.z = BitConverter.ToSingle(buffer, (2 * 4)) + _CROUCH;
+                return vec;
+            }
+        }
 
+        public static Vector3 ReadFOOTScatter(ulong address)
+        {
+            unsafe
+            {
+                byte[] buffer = Offsets.vmmScatter.Read(address, 12);
+
+                //convert bytes to floats
+                Vector3 vec = new Vector3();
+
+                vec.x = BitConverter.ToSingle(buffer, (0 * 4));
+                vec.y = BitConverter.ToSingle(buffer, (1 * 4));
+                vec.z = BitConverter.ToSingle(buffer, (2 * 4));
                 return vec;
             }
         }
@@ -306,13 +313,26 @@ namespace Framework
 
             while (true)
             {
+
                 if (Offsets.vmm.PidGetFromName(gameName, out Offsets.processPid))
                 {
+
+                    //solve the problem of two processes with the same name
+                    foreach (uint pid in Offsets.vmm.PidList())
+                    {
+                        //Console.Write($"{Offsets.vmm.ProcessGetInformationString(element, 3)} ");
+
+                        if (Offsets.vmm.ProcessGetInformationString(pid, 3).Contains(Examples.Example.keyHelpFindProcess))
+                        {
+                            Offsets.processPid = pid;
+                        }
+
+                    }
+
                     Console.WriteLine("Found Game!");
 
                     Framework.Offsets.vmmScatter = Framework.Offsets.vmm.Scatter_Initialize(Framework.Offsets.processPid, Framework.Vmm.FLAG_NOCACHE);
 
-                    Console.WriteLine("Finding process");
                     break;
                 }
                 else
